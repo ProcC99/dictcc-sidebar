@@ -8,6 +8,7 @@ import {
   PluginSettingTab,
   Setting,
   WorkspaceLeaf,
+  requestUrl,
 } from "obsidian";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -80,11 +81,12 @@ async function fetchDictCC(term: string): Promise<DictResult> {
 
   let html: string;
   try {
-    const res = await fetch(url, {
+    const res = await requestUrl({
+      url,
       headers: { "accept-language": "en,de;q=0.9" },
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    html = await res.text();
+    if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+    html = res.text;
   } catch {
     return { term, entries: [], suggestions: [], notFound: true };
   }
@@ -103,7 +105,7 @@ async function fetchDictCC(term: string): Promise<DictResult> {
   const suggLinkRe = /<a[^>]+href="[^"]*\?s=([^"&]+)[^"]*"[^>]*class="[^"]*(?:col1Entry|did-you-mean)[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
   let sm: RegExpExecArray | null;
   while ((sm = suggLinkRe.exec(html))) {
-    const t2 = stripTags(sm[2]).replace(/^[•·\-]\s*/, "");
+    const t2 = stripTags(sm[2]).replace(/^[•·-]\s*/, "");
     if (t2 && !suggestions.includes(t2)) suggestions.push(t2);
   }
 
@@ -112,7 +114,7 @@ async function fetchDictCC(term: string): Promise<DictResult> {
   const simRe = /<a[^>]+href="[^"]*\?s=([^"&]+)[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
   let sg: RegExpExecArray | null;
   while ((sg = simRe.exec(simBlock))) {
-    const t3 = stripTags(sg[2]).replace(/^[•·\-]\s*/, "");
+    const t3 = stripTags(sg[2]).replace(/^[•·-]\s*/, "");
     if (t3 && t3.length < 50 && !suggestions.includes(t3)) suggestions.push(t3);
   }
 
@@ -127,8 +129,8 @@ async function fetchDictCC(term: string): Promise<DictResult> {
   const jsArr = html.match(/var\s+c1Arr\s*=\s*(\[[\s\S]*?\]);\s*\n/);
   if (jsArr) {
     try {
-      // eslint-disable-next-line no-eval
-      const arr: Array<[number, [string, string], string, string[]]> = JSON.parse(jsArr[1]);
+      // eslint-disable-next-line no-eval -- dict.cc embeds translations in a JS variable
+      const arr = JSON.parse(jsArr[1]) as Array<[number, [string, string], string, string[]]>;
       for (const row of arr) {
         if (!Array.isArray(row) || !Array.isArray(row[1])) continue;
         const [en, de] = row[1];
@@ -236,7 +238,9 @@ class DictCCSidebarView extends ItemView {
       const sugList = sugBlock.createEl("div", { cls: "dictcc-sug-list" });
       for (const sug of result.suggestions) {
         const btn = sugList.createEl("button", { cls: "dictcc-sug-btn", text: sug });
-        btn.addEventListener("click", () => this.lookup(sug));
+        btn.addEventListener("click", () => {
+          this.lookup(sug).catch(console.error);
+        });
       }
     }
 
@@ -298,7 +302,7 @@ class DictCCSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "dict.cc Sidebar Settings" });
+    new Setting(containerEl).setName("dict.cc Sidebar Settings").setHeading();
 
     new Setting(containerEl)
       .setName("Translation direction")
@@ -322,7 +326,6 @@ class DictCCSettingTab extends PluginSettingTab {
         s
           .setLimits(5, 200, 5)
           .setValue(this.plugin.settings.maxResults)
-          .setDynamicTooltip()
           .onChange(async (val) => {
             this.plugin.settings.maxResults = val;
             await this.plugin.saveSettings();
@@ -343,7 +346,7 @@ export default class DictCCPlugin extends Plugin {
 
     // Editor right-click menu
     this.registerEvent(
-      (this.app.workspace as any).on(
+      this.app.workspace.on(
         "editor-menu",
         (menu: Menu, editor: Editor, _view: MarkdownView) => {
           const word = editor.getSelection().trim().split(/\s+/)[0];
@@ -352,14 +355,16 @@ export default class DictCCPlugin extends Plugin {
             item
               .setTitle(`dict.cc: "${word}"`)
               .setIcon("languages")
-              .onClick(() => this.openAndLookup(word))
+              .onClick(() => {
+                this.openAndLookup(word).catch(console.error);
+              })
           );
         }
       )
     );
 
     // Reading view right-click
-    this.registerDomEvent(document, "contextmenu", (evt: MouseEvent) => {
+    this.registerDomEvent(activeDocument, "contextmenu", (evt: MouseEvent) => {
       const target = evt.target as HTMLElement;
       if (!target.closest(".markdown-preview-view")) return;
       const selection = window.getSelection();
@@ -380,7 +385,9 @@ export default class DictCCPlugin extends Plugin {
         item
           .setTitle(`dict.cc: "${word}"`)
           .setIcon("languages")
-          .onClick(() => this.openAndLookup(word))
+          .onClick(() => {
+            this.openAndLookup(word).catch(console.error);
+          })
       );
       menu.showAtMouseEvent(evt);
     });
@@ -391,13 +398,15 @@ export default class DictCCPlugin extends Plugin {
       name: "Look up selection in dict.cc",
       editorCallback: (editor: Editor) => {
         const word = editor.getSelection().trim().split(/\s+/)[0];
-        if (word) this.openAndLookup(word);
+        if (word) {
+          this.openAndLookup(word).catch(console.error);
+        }
       },
     });
   }
 
-  async onunload(): Promise<void> {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+  onunload(): void {
+    // Let Obsidian handle detach, don't detach in onunload to keep the user's workspace layout
   }
 
   async openAndLookup(word: string): Promise<void> {
@@ -411,14 +420,18 @@ export default class DictCCPlugin extends Plugin {
       if (!leaf) return;
       await leaf.setViewState({ type: VIEW_TYPE, active: true });
     }
-    workspace.revealLeaf(leaf);
+    const pReveal = workspace.revealLeaf(leaf) as unknown;
+    if (pReveal instanceof Promise) {
+      await pReveal;
+    }
     if (leaf.view instanceof DictCCSidebarView) {
       await leaf.view.lookup(word);
     }
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const data = (await this.loadData()) as Partial<DictCCSettings> | null;
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
   }
 
   async saveSettings(): Promise<void> {
