@@ -1,0 +1,124 @@
+/* dict.cc Sidebar – Obsidian Plugin */
+
+.dictcc-container {
+  padding: 12px;
+  font-size: var(--font-ui-small);
+  line-height: 1.5;
+}
+
+.dictcc-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 8px;
+}
+
+.dictcc-word {
+  font-size: var(--font-ui-large);
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-normal);
+}
+
+.dictcc-source-link {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-accent);
+  text-decoration: none;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.dictcc-source-link:hover {
+  text-decoration: underline;
+}
+
+.dictcc-placeholder,
+.dictcc-loading,
+.dictcc-not-found {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* Suggestions / Did you mean */
+.dictcc-suggestions {
+  background: var(--background-secondary);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+}
+
+.dictcc-sug-label {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin: 0 0 6px 0;
+}
+
+.dictcc-sug-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dictcc-sug-btn {
+  background: var(--background-modifier-hover);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-accent);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.dictcc-sug-btn:hover {
+  background: var(--background-modifier-active-hover);
+}
+
+/* Section heading */
+.dictcc-section {
+  margin-bottom: 16px;
+}
+
+.dictcc-section-title {
+  font-size: var(--font-ui-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0 0 6px 0;
+}
+
+/* Table */
+.dictcc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-ui-small);
+}
+
+.dictcc-table th {
+  text-align: left;
+  padding: 4px 6px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.dictcc-table td {
+  padding: 4px 6px;
+  vertical-align: top;
+  color: var(--text-normal);
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+  word-break: break-word;
+}
+
+.dictcc-table tr:last-child td {
+  border-bottom: none;
+}
+
+.dictcc-table tr:hover td {
+  background: var(--background-modifier-hover);
+}

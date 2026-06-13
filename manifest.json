@@ -1,0 +1,10 @@
+{
+  "id": "dictcc-sidebar",
+  "name": "dict.cc Sidebar",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Right-click any selected word to look it up on dict.cc (German ↔ English). Shows bilingual translation tables in a sidebar with misspelling suggestions.",
+  "author": "Craig Irving",
+  "authorUrl": "https://github.com/craigirving",
+  "isDesktopOnly": true
+}
