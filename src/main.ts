@@ -302,7 +302,7 @@ class DictCCSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    new Setting(containerEl).setName("dict.cc Sidebar Settings").setHeading();
+    new Setting(containerEl).setName("General").setHeading();
 
     new Setting(containerEl)
       .setName("Translation direction")
