@@ -1,8 +1,8 @@
 {
   "id": "dictcc-sidebar",
   "name": "dict.cc Sidebar",
-  "version": "1.0.2",
-  "minAppVersion": "1.6.0",
+  "version": "1.0.3",
+  "minAppVersion": "1.7.2",
   "description": "Right-click any selected word to look it up on dict.cc (German ↔ English). Shows bilingual translation tables in a sidebar with misspelling suggestions.",
   "author": "Ergo ProcC",
   "authorUrl": "https://github.com/ProcC99",

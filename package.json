@@ -1,6 +1,6 @@
 {
   "name": "dictcc-sidebar",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Obsidian plugin: dict.cc sidebar for German-English translation",
   "main": "main.js",
   "scripts": {
